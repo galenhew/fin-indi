@@ -35,6 +35,8 @@ with tab2:
     fig = px.line(df_clown, x="date", y="compound", color='name')
     st.plotly_chart(fig)
 
+def date_change_plots(date_start):
+
 
 with tab1:
     # snp and aaii charts
@@ -45,13 +47,13 @@ with tab1:
                 'aaii': df_aaii}
 
     snp_m = snp_merge(plot_dict)
-    fig = plot_snp_multi_indi(snp_m)
 
     st.header("S&P and Indicators")
     date_start = st.date_input(
         label = "start date",
         value= datetime.date(2007, 11, 1))
-    st.plotly_chart(fig, date_start.strftime("%Y-%m-%d"))
+    fig = plot_snp_multi_indi(snp_m, date_start.strftime("%Y-%m-%d"))
+    st.plotly_chart(fig)
 
 
 
