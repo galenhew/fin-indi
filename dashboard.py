@@ -5,13 +5,18 @@ import numpy as np
 import nltk
 nltk.download('vader_lexicon')
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
 import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
 import tweepy # OAuth2.0 Version
 import requests
+import quandl
+import ffn
 
 
 ################################### seceret keys ###################################
@@ -224,4 +229,137 @@ def clown_tweets(df):
 
 df_clown = clown_tweets(df_tweets)
 fig = px.line(df_clown, x="date", y="compound", color='name')
+fig.show()
+
+# aaii sentiment
+
+
+def aaii_sentiment():
+    aaii = quandl.get('AAII/AAII_SENTIMENT', start_date='2007-11-01')
+    aaii = aaii.reset_index()
+
+    aaii['Bullish'] = pd.to_numeric(aaii['Bullish']).fillna(aaii['Bullish'].mean())
+    aaii['Neutral'] = pd.to_numeric(aaii['Neutral']).fillna(aaii['Neutral'].mean())
+    aaii['Bearish'] = pd.to_numeric(aaii['Bearish']).fillna(aaii['Bearish'].mean())
+    # aaii['date']= aaii['Reported Date'].dt.normalize()
+    aaii = aaii.sort_values(by='Date')
+    aaii = aaii[['Date','Bullish','Neutral','Bearish']]
+
+    # create compound score
+    aaii['comp']= aaii['Bullish'] + aaii['Neutral']*0 + aaii['Bearish']*-1
+
+    def normalize(df, feature_name):
+        result = df.copy()
+        # for feature_name in df.columns:
+        max_value = df[feature_name].max()
+        min_value = df[feature_name].min()
+        result[feature_name + 'norm'] = (df[feature_name] - min_value) / (max_value - min_value)
+        return result
+
+    def fourier(df, senti_col):
+        # extract sentiment score as a discrete fourier transform
+        price_fourier = np.fft.fft(np.asarray(df[senti_col].tolist()))  # convert sentiment to FFT with numpy
+        fourier_df = pd.DataFrame({'fourier': price_fourier})  # add to a dataframe
+        fourier_list = np.asarray(fourier_df['fourier'].tolist())  # extract fourier score as array
+
+        for num_ in range(5, 30, 5):  # create fourier columns with scores 20 and 25
+            # compound fourier to smoothen signal
+            fourier_list_m10 = np.copy(fourier_list)
+            fourier_list_m10[num_:-num_] = 0
+            # transform back into time spectrum append each fourier to dataframe with name of fourier
+            df['fourier ' + str(num_)] = np.fft.ifft(fourier_list_m10)
+            # convert fourier to real
+            df['fourier ' + str(num_)] = df['fourier ' + str(num_)].apply(lambda x: np.real(x))
+
+        # # plotting sentiment score and fourier transformed scores with different compounds
+        # df[['fourier 5', 'fourier 10', 'fourier 15', 'fourier 20', 'fourier 25']].plot(figsize=(10, 6))
+
+        # after choose fourier number
+        df = df.drop(['fourier 5', 'fourier 10', 'fourier 15', 'fourier 20'], axis=1)
+        df = normalize(df, 'fourier 25')
+        return df
+
+    df_f = fourier(aaii, 'comp')
+    return df_f
+
+
+def get_snp_df():
+    spy = ffn.get('spy', start='2007-11-01')
+    spy = spy.reset_index()
+    spy['Date'] = pd.to_datetime(spy['Date']).dt.normalize()
+    return spy
+
+
+def snp_merge(plot_dict):
+    spy_m = plot_dict['spy'].merge(plot_dict['aaii'], how="inner", on="Date")
+    return spy_m
+
+
+def plot_snp_multi_indi(df_f):
+
+    # get 2SD lines on sentiment chart
+    fourier_25_mean = df_f['fourier 25norm'].mean()
+    fourier_25_sd = df_f['fourier 25norm'].std()
+    fourier_25_mean + fourier_25_sd * 2
+    fourier_25_mean - fourier_25_sd * 2
+
+    df = df_f.copy()
+
+    fig = make_subplots(
+        rows=2, cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.03,
+        specs=[[{"type": "scatter"}],
+               [{"type": "scatter"}],
+               [{"type": "scatter"}]]
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df["Date"],
+            y=df["spy"],
+            mode="lines",
+            name="SPY"
+        ),
+        row=1, col=1
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df["Date"],
+            y=df["fourier 25norm"],
+            mode="lines",
+            name="AAII sentiment"
+        ),
+        row=2, col=1
+    )
+    fig.add_hline(y=fourier_25_mean + fourier_25_sd * 2, line_dash="dot", row=2, col=1,
+                  annotation_text="2 SD",
+                  annotation_position="bottom right")
+    fig.add_hline(y=fourier_25_mean + fourier_25_sd, line_dash="dot", row=2, col=1,
+                  annotation_text="1 SD",
+                  annotation_position="bottom right")
+
+    fig.add_hline(y=fourier_25_mean - fourier_25_sd, line_dash="dot", row=2, col=1,
+                  annotation_text="1 SD",
+                  annotation_position="bottom right")
+
+    fig.add_hline(y=fourier_25_mean - fourier_25_sd * 2, line_dash="dot", row=2, col=1,
+                  annotation_text="2 SD",
+                  annotation_position="bottom right")
+
+    # fig = px.line(df_clown, x="date", y="compound", color='name')
+    # fig.show()
+
+    return fig
+
+
+df_aaii = aaii_sentiment()
+df_spy = get_snp_df()
+
+plot_dict = {'spy': df_spy,
+            'aaii': df_aaii}
+
+snp_m = snp_merge(plot_dict)
+fig = plot_snp_multi_indi(snp_m)
 fig.show()
