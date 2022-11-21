@@ -21,7 +21,6 @@ config.read(".streamlit/secrets.toml")
 
 ####################################################################################
 
-# st.title("Stocks")
 
 
 class FinTweepy:
