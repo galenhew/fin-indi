@@ -23,24 +23,32 @@ df_tweet_incre = gbq.get_increment()
 gbq.push_to_gbq_base(df_tweet_incre)
 df_tweets = gbq.get_gbq_timeline()
 
-# clown chart
-df_clown = clown_tweets(df_tweets)
-# st.dataframe(df_clown)
-st.header("Clown Sentiment")
-fig = px.line(df_clown, x="date", y="compound", color='name')
-st.plotly_chart(fig)
+
+tab1, tab2 = st.tabs(["Home", "Sentiment"])
+
+with tab2:
+    # clown chart
+    df_clown = clown_tweets(df_tweets)
+    # st.dataframe(df_clown)
+    st.header("Clown Sentiment")
+    fig = px.line(df_clown, x="date", y="compound", color='name')
+    st.plotly_chart(fig)
 
 
-# snp and aaii charts
-df_aaii = aaii_sentiment()
-df_spy = get_snp_df()
+with tab1:
+    # snp and aaii charts
+    df_aaii = aaii_sentiment()
+    df_spy = get_snp_df()
 
-plot_dict = {'spy': df_spy,
-            'aaii': df_aaii}
+    plot_dict = {'spy': df_spy,
+                'aaii': df_aaii}
 
-snp_m = snp_merge(plot_dict)
-fig = plot_snp_multi_indi(snp_m)
+    snp_m = snp_merge(plot_dict)
+    fig = plot_snp_multi_indi(snp_m)
 
-st.header("S&P and Indicators")
-st.plotly_chart(fig)
+    st.header("S&P and Indicators")
+    st.plotly_chart(fig)
+
+
+
 

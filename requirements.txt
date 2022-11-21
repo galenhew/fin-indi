@@ -5,5 +5,5 @@ tweepy
 toml
 nltk
 plotly
-quandl
 ffn
+xlrd

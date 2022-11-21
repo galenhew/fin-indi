@@ -15,7 +15,6 @@ from google.oauth2 import service_account
 
 import tweepy # OAuth2.0 Version
 import requests
-import quandl
 import ffn
 
 
@@ -235,13 +234,25 @@ fig.show()
 
 
 def aaii_sentiment():
-    aaii = quandl.get('AAII/AAII_SENTIMENT', start_date='2007-11-01')
-    aaii = aaii.reset_index()
+    # clean excel sheet. can be replaced by api
 
+    aaii_raw = pd.read_excel('data/' + 'sentiment.xls', engine="xlrd", skiprows=range(1849, 2043), header=None)
+    aaii_raw = aaii_raw.iloc[1:, :]
+    aaii_header = aaii_raw.iloc[:3, :]
+    aaii_header = aaii_header.fillna('')
+    aaii_data = aaii_raw.iloc[4:, :]
+    aaii_header_list = aaii_header.apply(lambda x: ' '.join(x.astype(str)).strip()).to_list()
+    aaii = pd.DataFrame(
+        np.row_stack([aaii_data.columns, aaii_data.values]),
+        columns=aaii_header_list
+    )
+
+    # clean dataframe
     aaii['Bullish'] = pd.to_numeric(aaii['Bullish']).fillna(aaii['Bullish'].mean())
     aaii['Neutral'] = pd.to_numeric(aaii['Neutral']).fillna(aaii['Neutral'].mean())
     aaii['Bearish'] = pd.to_numeric(aaii['Bearish']).fillna(aaii['Bearish'].mean())
-    # aaii['date']= aaii['Reported Date'].dt.normalize()
+    aaii['Reported Date'] = pd.to_datetime(aaii['Reported Date'],  errors='coerce')
+    aaii['Date']= aaii['Reported Date'].dt.normalize()
     aaii = aaii.sort_values(by='Date')
     aaii = aaii[['Date','Bullish','Neutral','Bearish']]
 
