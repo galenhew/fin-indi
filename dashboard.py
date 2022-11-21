@@ -1,4 +1,6 @@
 import configparser
+import toml
+
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 import pandas as pd
@@ -14,8 +16,9 @@ import requests
 
 ################################### seceret keys ###################################
 # dev
-config = configparser.ConfigParser()
-config.read(".streamlit/secrets.toml")
+# config = configparser.ConfigParser()
+# config.read(".streamlit/secrets.toml")
+config = toml.load(".streamlit/secrets.toml")
 
 # prod
 
@@ -27,11 +30,11 @@ class FinTweepy:
 
 
     def __init__(self, config):
-        self.bearer_token  = config['tweepy']['bearer_token']
-        self.api_key = config['tweepy']['api_key']
-        self.api_key_secret = config['tweepy']['api_key_secret']
-        self.access_token = config['tweepy']['access_token']
-        self.access_token_secret = config['tweepy']['access_token_secret']
+        self.bearer_token  = config['bearer_token']
+        self.api_key = config['api_key']
+        self.api_key_secret = config['api_key_secret']
+        self.access_token = config['access_token']
+        self.access_token_secret = config['access_token_secret']
         self.client = tweepy.Client(bearer_token=self.bearer_token,
                                consumer_key=self.api_key,
                                consumer_secret=self.api_key_secret,
@@ -97,7 +100,7 @@ class FinTweepy:
         return df
 
 
-tweet = FinTweepy(config)
+tweet = FinTweepy(config['tweepy'])
 df_author = tweet.get_author_df()
 df_timeline = tweet.get_user_timeline('from:jimcramer')
 df_all_users_timeline = tweet.get_all_users_timeline()
@@ -187,8 +190,8 @@ class Bigquery:
         return df
 
 
-gbq = Bigquery(config)
-gbq.push_to_gbq_new_table(df_all_users_timeline)
-df_tweet_incre = gbq.get_increment()
-gbq.push_to_gbq_base(df_tweet_incre)
-tweets = gbq.get_gbq_timeline()
+# gbq = Bigquery(config)
+# gbq.push_to_gbq_new_table(df_all_users_timeline)
+# df_tweet_incre = gbq.get_increment()
+# gbq.push_to_gbq_base(df_tweet_incre)
+# tweets = gbq.get_gbq_timeline()
