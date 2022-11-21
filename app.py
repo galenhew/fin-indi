@@ -49,9 +49,9 @@ with tab1:
 
     st.header("S&P and Indicators")
     date_start = st.date_input(
-        "start date",
-        datetime.date(2007, 11, 1))
-    st.plotly_chart(fig, date_start)
+        label = "start date",
+        value= datetime.date(2007, 11, 1))
+    st.plotly_chart(fig, date_start.strftime("%Y-%m-%d"))
 
 
 

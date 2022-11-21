@@ -315,7 +315,7 @@ def plot_snp_multi_indi(df_f, date_start):
     fourier_25_mean - fourier_25_sd * 2
 
     df = df_f.copy()
-    df= df[df['Date']> date_start]
+    df= df[df['Date'] >= date_start]
 
     fig = make_subplots(
         rows=2, cols=1,
