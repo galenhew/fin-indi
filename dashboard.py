@@ -1,29 +1,24 @@
 import configparser
 import toml
-
-import streamlit as st
-from streamlit_autorefresh import st_autorefresh
 import pandas as pd
 import numpy as np
+import nltk
+nltk.download('vader_lexicon')
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import plotly.express as px
 
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
-import json
 import tweepy # OAuth2.0 Version
 import requests
 
 
 ################################### seceret keys ###################################
 # dev
-# config = configparser.ConfigParser()
-# config.read(".streamlit/secrets.toml")
 config = toml.load(".streamlit/secrets.toml")
 
-# prod
-
 ####################################################################################
-
 
 
 class FinTweepy:
@@ -192,4 +187,41 @@ gbq = Bigquery(config['google-bigquery'])
 gbq.push_to_gbq_new_table(df_all_users_timeline)
 df_tweet_incre = gbq.get_increment()
 gbq.push_to_gbq_base(df_tweet_incre)
-tweets = gbq.get_gbq_timeline()
+df_tweets = gbq.get_gbq_timeline()
+
+
+def clown_tweets(df):
+    sid = SentimentIntensityAnalyzer()
+
+    # add author_name to sentiment df
+    df_sent = df.merge(df_author[['name', 'id']]\
+                    .rename(columns={'id': 'author_id'}), how="left", on="author_id")
+
+    df_sent['scores'] = df_sent['text'].apply(lambda tweet: sid.polarity_scores(tweet))
+    df_sent['compound'] = df_sent['scores'].apply(lambda score_dict: score_dict['compound'])
+    df_sent['date'] = df_sent['created_at'].dt.normalize()
+    # strftime('%Y-%m-%d')
+    df_sent = df_sent.sort_values(by='created_at')
+
+    def plots(author_dict, df):
+        # filter by author_id and group by dates first to get sentiment per day. else jumbles authors.
+        df1 = df[df['author_id'] == author_dict['id']]
+        df1 = df1[['date', 'author_id', 'compound']].groupby('date').mean()
+        df1['name'] = author_dict['name']
+        return df1
+
+    # concat grouped by dates authors
+    df_clown_list = []
+    df_author_dict = df_author[['name', 'id']].to_dict('records')
+
+    for i in df_author_dict:
+        df_clown_list.append(plots(i, df_sent))
+
+    df_clown = pd.concat(df_clown_list).reset_index()
+
+    return df_clown
+
+
+df_clown = clown_tweets(df_tweets)
+fig = px.line(df_clown, x="date", y="compound", color='name')
+fig.show()

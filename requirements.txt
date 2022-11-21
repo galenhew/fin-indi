@@ -2,3 +2,6 @@ google-cloud-bigquery
 pandas-gbq
 streamlit_autorefresh
 tweepy
+toml
+nltk
+plotly
