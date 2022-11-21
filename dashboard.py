@@ -310,7 +310,6 @@ def plot_snp_multi_indi(df_f):
         shared_xaxes=True,
         vertical_spacing=0.03,
         specs=[[{"type": "scatter"}],
-               [{"type": "scatter"}],
                [{"type": "scatter"}]]
     )
 

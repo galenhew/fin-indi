@@ -43,3 +43,4 @@ fig = plot_snp_multi_indi(snp_m)
 
 st.header("S&P and Indicators")
 st.plotly_chart(fig)
+
