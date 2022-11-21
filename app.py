@@ -35,9 +35,6 @@ with tab2:
     fig = px.line(df_clown, x="date", y="compound", color='name')
     st.plotly_chart(fig)
 
-def date_change_plots(date_start):
-
-
 with tab1:
     # snp and aaii charts
     df_aaii = aaii_sentiment()
