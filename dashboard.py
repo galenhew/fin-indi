@@ -110,9 +110,7 @@ df_all_users_timeline = tweet.get_all_users_timeline()
 class Bigquery:
 
     def __init__(self, config):
-        file_json= "./streamlit/google-bigquery-fin-viz.json"
-        self.bigquery_key_json = json.loads(file_json, strict=False)
-        self.credentials = service_account.Credentials.from_service_account_info(self.bigquery_key_json)
+        self.credentials = service_account.Credentials.from_service_account_info(config)
         self.client = bigquery.Client(credentials=self.credentials)
         self.destination_table = 'tweets.timeline'
         self.destination_table_new = 'tweets.timeline_new'
@@ -190,8 +188,8 @@ class Bigquery:
         return df
 
 
-# gbq = Bigquery(config)
-# gbq.push_to_gbq_new_table(df_all_users_timeline)
-# df_tweet_incre = gbq.get_increment()
-# gbq.push_to_gbq_base(df_tweet_incre)
-# tweets = gbq.get_gbq_timeline()
+gbq = Bigquery(config['google-bigquery'])
+gbq.push_to_gbq_new_table(df_all_users_timeline)
+df_tweet_incre = gbq.get_increment()
+gbq.push_to_gbq_base(df_tweet_incre)
+tweets = gbq.get_gbq_timeline()
