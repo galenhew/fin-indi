@@ -3,6 +3,7 @@ from dashboard import (FinTweepy, Bigquery, clown_tweets,
                        aaii_sentiment, get_snp_df, snp_merge, plot_snp_multi_indi)
 import plotly.express as px
 from streamlit_autorefresh import st_autorefresh
+import datetime
 
 
 st.title("Stocks")
@@ -47,7 +48,10 @@ with tab1:
     fig = plot_snp_multi_indi(snp_m)
 
     st.header("S&P and Indicators")
-    st.plotly_chart(fig)
+    date_start = st.date_input(
+        "start date",
+        datetime.date(2007, 11, 1))
+    st.plotly_chart(fig, date_start)
 
 
 

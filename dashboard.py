@@ -306,7 +306,7 @@ def snp_merge(plot_dict):
     return spy_m
 
 
-def plot_snp_multi_indi(df_f):
+def plot_snp_multi_indi(df_f, date_start):
 
     # get 2SD lines on sentiment chart
     fourier_25_mean = df_f['fourier 25norm'].mean()
@@ -315,6 +315,7 @@ def plot_snp_multi_indi(df_f):
     fourier_25_mean - fourier_25_sd * 2
 
     df = df_f.copy()
+    df= df[df['Date']> date_start]
 
     fig = make_subplots(
         rows=2, cols=1,
@@ -371,5 +372,5 @@ plot_dict = {'spy': df_spy,
             'aaii': df_aaii}
 
 snp_m = snp_merge(plot_dict)
-fig = plot_snp_multi_indi(snp_m)
+fig = plot_snp_multi_indi(snp_m, '2007-11-01')
 fig.show()
