@@ -25,6 +25,10 @@ App objective: Show live indicators
   - AAII data by excel only for free. unable to scrape, unless selenium?
   - quandl has api but outdated
   - scheduled twitter pulls with redis, in it's own compute engine. Then FE only needs to pull full tweets data.
+- ML
+  - Sentiment analysis by Vader for dev speed
+  - Use Bert model for more accuracy    
+  - Tweets should be classified on different topics, and only relevant finance subjects processed for sentiment
   
 ## Steps
 - ```pip install -r requirements.txt```
