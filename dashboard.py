@@ -41,7 +41,7 @@ class FinTweepy:
                                access_token_secret=self.access_token_secret,
                                return_type=requests.Response,
                                wait_on_rate_limit=True)
-        self.usernames = ["jimcramer","fundstrat","DaveHcontrarian", "GoldmanSachs"]
+        self.usernames = ["saxena_puru", "jimcramer","fundstrat","DaveHcontrarian", "GoldmanSachs"]
 
 
     def get_author_df(self):
